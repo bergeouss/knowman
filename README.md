@@ -262,6 +262,31 @@ bun run test:dashboard
 bun run test:extension
 ```
 
+## Branch Protection
+
+KnowMan includes branch protection rules for the main branch to ensure code quality and prevent direct pushes. The rules are defined in `.github/branch-protection.json`.
+
+### Protection Rules
+- **Required status checks**: CI workflow must pass (`test` job)
+- **Required reviews**: At least 1 approving review for pull requests
+- **Linear history**: No merge commits allowed
+- **No force pushes**: Prevent rewriting history
+- **Conversation resolution**: All review comments must be resolved
+- **Admin enforcement**: Rules apply to repository admins too
+
+### Applying Rules
+```bash
+# Using GitHub CLI
+gh api repos/bergeouss/knowman/branches/main/protection --input .github/branch-protection.json
+```
+
+### Required Status Checks
+The `test` job runs:
+- Linting (ESLint)
+- Type checking (TypeScript)
+- Unit tests (Bun test)
+- Build verification
+
 ## Database Schema
 
 ### Core Entities
