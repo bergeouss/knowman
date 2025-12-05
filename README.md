@@ -224,6 +224,39 @@ Backend API runs on `http://localhost:3001`:
 - `GET /api/tags` - List tags
 - `GET /api/processing/status` - Processing queue status
 
+## Docker Development
+
+KnowMan includes Docker Compose configuration for local development with all services.
+
+**Start all services:**
+```bash
+docker-compose up -d
+```
+
+**View logs:**
+```bash
+docker-compose logs -f
+```
+
+**Stop services:**
+```bash
+docker-compose down
+```
+
+**Rebuild containers:**
+```bash
+docker-compose up -d --build
+```
+
+**Services:**
+- **Redis**: redis://localhost:6379
+- **Backend API**: http://localhost:3001
+- **Dashboard**: http://localhost:3000
+
+**Volumes:**
+- SQLite database persists in `backend-data` volume
+- Redis data persists in `redis-data` volume
+
 ## Building for Production
 
 **Build all packages:**
