@@ -295,6 +295,33 @@ bun run test:dashboard
 bun run test:extension
 ```
 
+## GitHub Repository Setup
+
+KnowMan includes GitHub Actions workflows for continuous integration. The workflow runs on pushes and pull requests to the main branch.
+
+### CI Workflow
+
+The `.github/workflows/ci.yml` file defines the CI pipeline:
+
+1. **Test Job**: Runs lint, type checking, tests, and builds all packages
+2. **Package Extension Job**: Builds and packages the browser extension as a ZIP artifact
+3. **Docker Build Job**: Validates Docker images build successfully
+
+### Setting Up GitHub Actions
+
+1. **Enable Actions**: GitHub Actions are automatically enabled when you push the repository to GitHub
+2. **Branch Protection**: Configure branch protection rules in repository settings:
+   - Require status checks to pass before merging
+   - Include "Test" and "Package Extension" jobs
+   - Require pull request reviews
+3. **Secrets**: For deployment (optional), set up secrets for:
+   - Docker Hub credentials (if publishing images)
+   - Cloud provider credentials (if deploying)
+
+### Manual Trigger
+
+You can also manually trigger the workflow from the GitHub Actions tab.
+
 ## Database Schema
 
 ### Core Entities

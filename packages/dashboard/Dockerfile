@@ -4,11 +4,12 @@ WORKDIR /app
 
 # Copy package files
 COPY package.json bun.lock ./
+COPY tsconfig.base.json ./
 COPY packages/dashboard/package.json ./packages/dashboard/
 COPY packages/types/package.json ./packages/types/
 
 # Install dependencies
-RUN bun install --frozen-lockfile
+RUN bun install
 
 # Copy source code
 COPY packages/dashboard ./packages/dashboard

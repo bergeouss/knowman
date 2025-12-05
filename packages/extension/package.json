@@ -9,7 +9,8 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "type-check": "tsc --noEmit",
-    "package": "bun run build && zip -r ../extension.zip dist/"
+    "package": "bun run build && zip -r ../extension.zip dist/",
+    "test": "bun test"
   },
   "dependencies": {
     "react": "^19.2.0",

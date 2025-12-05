@@ -4,9 +4,7 @@ const nextConfig: NextConfig = {
   /* config options here */
   reactStrictMode: true,
   transpilePackages: ['@knowman/types'],
-  experimental: {
-    serverComponentsExternalPackages: ['@knowman/types']
-  }
+  serverExternalPackages: ['@knowman/types']
 }
 
 export default nextConfig
