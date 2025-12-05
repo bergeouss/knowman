@@ -224,6 +224,39 @@ Backend API runs on `http://localhost:3001`:
 - `GET /api/tags` - List tags
 - `GET /api/processing/status` - Processing queue status
 
+## Docker Development
+
+KnowMan includes Docker Compose configuration for local development with all services.
+
+**Start all services:**
+```bash
+docker-compose up -d
+```
+
+**View logs:**
+```bash
+docker-compose logs -f
+```
+
+**Stop services:**
+```bash
+docker-compose down
+```
+
+**Rebuild containers:**
+```bash
+docker-compose up -d --build
+```
+
+**Services:**
+- **Redis**: redis://localhost:6379
+- **Backend API**: http://localhost:3001
+- **Dashboard**: http://localhost:3000
+
+**Volumes:**
+- SQLite database persists in `backend-data` volume
+- Redis data persists in `redis-data` volume
+
 ## Building for Production
 
 **Build all packages:**
@@ -262,30 +295,32 @@ bun run test:dashboard
 bun run test:extension
 ```
 
-## Branch Protection
+## GitHub Repository Setup
 
-KnowMan includes branch protection rules for the main branch to ensure code quality and prevent direct pushes. The rules are defined in `.github/branch-protection.json`.
+KnowMan includes GitHub Actions workflows for continuous integration. The workflow runs on pushes and pull requests to the main branch.
 
-### Protection Rules
-- **Required status checks**: CI workflow must pass (`test` job)
-- **Required reviews**: At least 1 approving review for pull requests
-- **Linear history**: No merge commits allowed
-- **No force pushes**: Prevent rewriting history
-- **Conversation resolution**: All review comments must be resolved
-- **Admin enforcement**: Rules apply to repository admins too
+### CI Workflow
 
-### Applying Rules
-```bash
-# Using GitHub CLI
-gh api repos/bergeouss/knowman/branches/main/protection --input .github/branch-protection.json
-```
+The `.github/workflows/ci.yml` file defines the CI pipeline:
 
-### Required Status Checks
-The `test` job runs:
-- Linting (ESLint)
-- Type checking (TypeScript)
-- Unit tests (Bun test)
-- Build verification
+1. **Test Job**: Runs lint, type checking, tests, and builds all packages
+2. **Package Extension Job**: Builds and packages the browser extension as a ZIP artifact
+3. **Docker Build Job**: Validates Docker images build successfully
+
+### Setting Up GitHub Actions
+
+1. **Enable Actions**: GitHub Actions are automatically enabled when you push the repository to GitHub
+2. **Branch Protection**: Configure branch protection rules in repository settings:
+   - Require status checks to pass before merging
+   - Include "Test" and "Package Extension" jobs
+   - Require pull request reviews
+3. **Secrets**: For deployment (optional), set up secrets for:
+   - Docker Hub credentials (if publishing images)
+   - Cloud provider credentials (if deploying)
+
+### Manual Trigger
+
+You can also manually trigger the workflow from the GitHub Actions tab.
 
 ## Database Schema
 

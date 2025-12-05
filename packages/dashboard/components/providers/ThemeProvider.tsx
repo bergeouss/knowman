@@ -65,7 +65,7 @@ export function ThemeProvider({
       setTheme(theme)
       try {
         localStorage.setItem('knowman-theme', theme)
-      } catch (error) {
+      } catch (_unusedError) { // eslint-disable-line @typescript-eslint/no-unused-vars
         // LocalStorage might be disabled
       }
     },

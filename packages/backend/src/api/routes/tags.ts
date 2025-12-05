@@ -2,7 +2,6 @@ import express from 'express'
 import { getRepository } from '../../database'
 import { Tag } from '../../database/entities/Tag'
 import { KnowledgeItem } from '../../database/entities/KnowledgeItem'
-import { logger } from '../../logging'
 
 const router = express.Router()
 

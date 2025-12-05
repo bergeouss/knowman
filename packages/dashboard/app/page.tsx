@@ -1,4 +1,4 @@
-import { BookOpen, FileText, Search, TrendingUp, Users, Zap } from 'lucide-react'
+import { BookOpen, Search, TrendingUp, Zap } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
 import { RecentItems } from '@/components/dashboard/RecentItems'

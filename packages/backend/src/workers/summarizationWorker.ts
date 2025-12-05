@@ -13,7 +13,7 @@ export interface SummarizationJobData {
 }
 
 export async function processSummarizationJob(job: Job<SummarizationJobData>) {
-  const { knowledgeItemId, userId, content, title } = job.data
+  const { knowledgeItemId, userId, content, title: _title } = job.data
   const jobId = job.id
 
   logger.info(`Processing summarization job ${jobId} for item ${knowledgeItemId}`)

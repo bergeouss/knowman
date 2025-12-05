@@ -40,7 +40,7 @@ apiRouter.use('/tags', tagsRouter)
 apiRouter.use('/processing', processingRouter)
 
 // Error handling for API routes
-apiRouter.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
+apiRouter.use((err: Error, req: express.Request, res: express.Response, _next: express.NextFunction) => {
   console.error('API Error:', err)
   res.status(500).json({
     error: 'Internal server error',

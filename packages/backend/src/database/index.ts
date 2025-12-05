@@ -1,5 +1,4 @@
 import { DataSource } from 'typeorm'
-import { config } from '../config'
 import { logger } from '../logging'
 import { createDataSource } from './data-source'
 

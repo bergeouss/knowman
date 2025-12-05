@@ -1,5 +1,4 @@
 import { BookOpen, Download, Settings, Upload, Zap } from 'lucide-react'
-import { Button } from '@/components/ui/Button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
 
 const actions = [

@@ -6,7 +6,7 @@ import { config } from './config'
 import { logger } from './logging'
 import { initializeDatabase } from './database'
 import { initializeRedis } from './redis'
-import { initializeQueues, initializeWorkers, closeQueues } from './queues'
+import { initializeQueues, initializeWorkers } from './queues'
 import { apiRouter } from './api'
 
 async function bootstrap() {
@@ -28,7 +28,7 @@ async function bootstrap() {
   logger.info('Queues initialized')
 
   // Initialize workers
-  const workers = await initializeWorkers(redis)
+  const _workers = await initializeWorkers(redis)
   logger.info('Workers initialized')
 
   // Create Express app
@@ -57,7 +57,7 @@ async function bootstrap() {
   app.use('/api', apiRouter)
 
   // Error handling middleware
-  app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  app.use((err: Error, req: express.Request, res: express.Response, _next: express.NextFunction) => {
     logger.error(err, 'Unhandled error')
     res.status(500).json({
       error: 'Internal server error',

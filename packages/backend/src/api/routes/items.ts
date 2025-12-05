@@ -1,8 +1,6 @@
 import express from 'express'
-import { z } from 'zod'
 import { getRepository } from '../../database'
 import { KnowledgeItem } from '../../database/entities/KnowledgeItem'
-import { logger } from '../../logging'
 
 const router = express.Router()
 

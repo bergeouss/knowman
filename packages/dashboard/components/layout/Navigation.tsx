@@ -3,9 +3,8 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Bell, BookOpen, Search, Settings, User, Menu, X } from 'lucide-react'
+import { Bell, BookOpen, Search, Settings, Menu, X } from 'lucide-react'
 import { useTheme } from '@/components/providers/ThemeProvider'
-import { Button } from '@/components/ui/Button'
 
 const navigation = [
   { name: 'Dashboard', href: '/', icon: BookOpen },

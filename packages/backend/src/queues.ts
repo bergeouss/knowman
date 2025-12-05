@@ -169,7 +169,7 @@ function setupQueueEventListeners() {
       logger.debug(`Job ${jobId} added to ${queueName} queue`)
     })
 
-    events.on('completed', ({ jobId, returnvalue }) => {
+    events.on('completed', ({ jobId, returnvalue: _returnvalue }) => {
       logger.info(`Job ${jobId} completed in ${queueName} queue`)
     })
 

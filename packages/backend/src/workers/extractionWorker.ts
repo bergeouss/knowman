@@ -76,7 +76,7 @@ export async function processExtractionJob(job: Job<ExtractionJobData>) {
     // Calculate readability score (simple heuristic)
     const words = extractedContent.split(/\s+/).length
     const sentences = extractedContent.split(/[.!?]+/).length
-    const characters = extractedContent.length
+    const _characters = extractedContent.length
     const readabilityScore = sentences > 0 ? (words / sentences) < 30 ? 0.8 : 0.5 : 0.5
 
     // Update knowledge item
