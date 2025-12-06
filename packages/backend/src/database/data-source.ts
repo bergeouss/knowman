@@ -13,7 +13,6 @@ import { KnowledgeGraphEdge } from './entities/KnowledgeGraphEdge'
 import { CreateInitialSchema1690000000000 } from './migrations/1690000000000-CreateInitialSchema'
 
 export async function createDataSource(): Promise<DataSource> {
-  const _isProduction = config.NODE_ENV === 'production'
   const isTest = config.NODE_ENV === 'test'
 
   const dataSource = new DataSource({

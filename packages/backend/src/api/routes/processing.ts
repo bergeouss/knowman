@@ -4,7 +4,7 @@ import { ProcessingJob } from '../../database/entities/ProcessingJob'
 import { getQueues } from '../../queues'
 import { logger } from '../../logging'
 
-const router = express.Router()
+const router: express.Router = express.Router()
 
 // GET /api/processing/status - Get processing status overview
 router.get('/status', async (req, res, next) => {
@@ -129,9 +129,9 @@ router.get('/jobs/:id', async (req, res, next) => {
       return res.status(404).json({ error: 'Processing job not found' })
     }
 
-    res.json(job)
+    return res.json(job)
   } catch (error) {
-    next(error)
+    return next(error)
   }
 })
 
@@ -180,13 +180,13 @@ router.post('/jobs/:id/retry', async (req, res, next) => {
 
     logger.info(`Retried job ${id} (${job.type})`)
 
-    res.json({
+    return res.json({
       success: true,
       message: 'Job queued for retry',
       job,
     })
   } catch (error) {
-    next(error)
+    return next(error)
   }
 })
 
@@ -224,12 +224,12 @@ router.post('/jobs/:id/cancel', async (req, res, next) => {
 
     logger.info(`Cancelled job ${id} (${job.type})`)
 
-    res.json({
+    return res.json({
       success: true,
       message: 'Job cancelled',
     })
   } catch (error) {
-    next(error)
+    return next(error)
   }
 })
 

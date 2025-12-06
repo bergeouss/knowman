@@ -58,7 +58,7 @@ export class KnowledgeItem {
   @Column('text', { nullable: true })
   processedContent?: string
 
-  @Column('simple-array', { nullable: true, type: 'text' })
+  @Column('simple-json', { nullable: true })
   embeddings?: number[]
 
   @Column('float', { default: 0.5 })

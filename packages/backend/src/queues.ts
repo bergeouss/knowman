@@ -2,23 +2,23 @@ import { Queue, Worker, QueueEvents } from 'bullmq'
 import { Redis } from 'ioredis'
 import { config } from './config'
 import { logger } from './logging'
-import { processSummarizationJob } from './workers/summarizationWorker'
-import { processEmbeddingJob } from './workers/embeddingWorker'
-import { processTaggingJob } from './workers/taggingWorker'
-import { processExtractionJob } from './workers/extractionWorker'
+import { processSummarizationJob, SummarizationJobData } from './workers/summarizationWorker'
+import { processEmbeddingJob, EmbeddingJobData } from './workers/embeddingWorker'
+import { processTaggingJob, TaggingJobData } from './workers/taggingWorker'
+import { processExtractionJob, ExtractionJobData } from './workers/extractionWorker'
 
 export interface Queues {
-  summarization: Queue
-  embedding: Queue
-  tagging: Queue
-  extraction: Queue
+  summarization: Queue<SummarizationJobData>
+  embedding: Queue<EmbeddingJobData>
+  tagging: Queue<TaggingJobData>
+  extraction: Queue<ExtractionJobData>
 }
 
 export interface Workers {
-  summarization: Worker
-  embedding: Worker
-  tagging: Worker
-  extraction: Worker
+  summarization: Worker<SummarizationJobData>
+  embedding: Worker<EmbeddingJobData>
+  tagging: Worker<TaggingJobData>
+  extraction: Worker<ExtractionJobData>
 }
 
 export interface QueueEventsInstances {
@@ -165,19 +165,19 @@ function setupQueueEventListeners() {
   if (!queueEvents) return
 
   Object.entries(queueEvents).forEach(([queueName, events]) => {
-    events.on('added', ({ jobId }) => {
+    events.on('added', ({ jobId }: { jobId: string }) => {
       logger.debug(`Job ${jobId} added to ${queueName} queue`)
     })
 
-    events.on('completed', ({ jobId, returnvalue: _returnvalue }) => {
+    events.on('completed', ({ jobId, returnvalue: _returnvalue }: { jobId: string; returnvalue: any }) => {
       logger.info(`Job ${jobId} completed in ${queueName} queue`)
     })
 
-    events.on('failed', ({ jobId, failedReason }) => {
+    events.on('failed', ({ jobId, failedReason }: { jobId: string; failedReason: string }) => {
       logger.warn(`Job ${jobId} failed in ${queueName} queue: ${failedReason}`)
     })
 
-    events.on('stalled', ({ jobId }) => {
+    events.on('stalled', ({ jobId }: { jobId: string }) => {
       logger.warn(`Job ${jobId} stalled in ${queueName} queue`)
     })
   })
@@ -187,19 +187,19 @@ function setupWorkerEventListeners() {
   if (!workers) return
 
   Object.entries(workers).forEach(([workerName, worker]) => {
-    worker.on('completed', (job) => {
+    worker.on('completed', (job: any) => {
       logger.info(`Worker ${workerName} completed job ${job.id}`)
     })
 
-    worker.on('failed', (job, error) => {
+    worker.on('failed', (job: any, error: any) => {
       logger.error(error, `Worker ${workerName} failed job ${job?.id}`)
     })
 
-    worker.on('stalled', (jobId) => {
+    worker.on('stalled', (jobId: any) => {
       logger.warn(`Worker ${workerName} stalled job ${jobId}`)
     })
 
-    worker.on('error', (error) => {
+    worker.on('error', (error: any) => {
       logger.error(error, `Worker ${workerName} error`)
     })
   })

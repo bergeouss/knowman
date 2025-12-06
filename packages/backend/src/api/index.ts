@@ -6,7 +6,7 @@ import { tagsRouter } from './routes/tags'
 import { processingRouter } from './routes/processing'
 import { authMiddleware } from '../middleware/auth'
 
-export const apiRouter = express.Router()
+export const apiRouter: express.Router = express.Router()
 
 // Health check (already in main app)
 // apiRouter.get('/health', (req, res) => {
@@ -14,7 +14,7 @@ export const apiRouter = express.Router()
 // })
 
 // API documentation
-apiRouter.get('/docs', (req, res) => {
+apiRouter.get('/docs', (_req, res) => {
   res.json({
     name: 'KnowMan API',
     version: '0.1.0',
@@ -40,7 +40,7 @@ apiRouter.use('/tags', tagsRouter)
 apiRouter.use('/processing', processingRouter)
 
 // Error handling for API routes
-apiRouter.use((err: Error, req: express.Request, res: express.Response, _next: express.NextFunction) => {
+apiRouter.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   console.error('API Error:', err)
   res.status(500).json({
     error: 'Internal server error',

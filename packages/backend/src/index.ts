@@ -28,7 +28,7 @@ async function bootstrap() {
   logger.info('Queues initialized')
 
   // Initialize workers
-  const _workers = await initializeWorkers(redis)
+  await initializeWorkers(redis)
   logger.info('Workers initialized')
 
   // Create Express app
@@ -44,7 +44,7 @@ async function bootstrap() {
   app.use(express.urlencoded({ extended: true }))
 
   // Health check endpoint
-  app.get('/health', (req, res) => {
+  app.get('/health', (_req, res) => {
     res.json({
       status: 'healthy',
       timestamp: new Date().toISOString(),
@@ -57,7 +57,7 @@ async function bootstrap() {
   app.use('/api', apiRouter)
 
   // Error handling middleware
-  app.use((err: Error, req: express.Request, res: express.Response, _next: express.NextFunction) => {
+  app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
     logger.error(err, 'Unhandled error')
     res.status(500).json({
       error: 'Internal server error',
@@ -66,7 +66,7 @@ async function bootstrap() {
   })
 
   // 404 handler
-  app.use((req, res) => {
+  app.use((_req, res) => {
     res.status(404).json({ error: 'Not found' })
   })
 

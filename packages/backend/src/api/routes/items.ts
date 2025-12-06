@@ -2,7 +2,7 @@ import express from 'express'
 import { getRepository } from '../../database'
 import { KnowledgeItem } from '../../database/entities/KnowledgeItem'
 
-const router = express.Router()
+const router: express.Router = express.Router()
 
 // GET /api/items - List knowledge items
 router.get('/', async (req, res, next) => {
@@ -50,7 +50,7 @@ router.get('/', async (req, res, next) => {
 
     const items = await qb.getMany()
 
-    res.json({
+    return res.json({
       items,
       total,
       limit: parseInt(limit as string),
@@ -58,7 +58,7 @@ router.get('/', async (req, res, next) => {
       hasMore: parseInt(offset as string) + parseInt(limit as string) < total,
     })
   } catch (error) {
-    next(error)
+    return next(error)
   }
 })
 
@@ -77,9 +77,9 @@ router.get('/:id', async (req, res, next) => {
       return res.status(404).json({ error: 'Knowledge item not found' })
     }
 
-    res.json(item)
+    return res.json(item)
   } catch (error) {
-    next(error)
+    return next(error)
   }
 })
 
@@ -110,9 +110,9 @@ router.put('/:id', async (req, res, next) => {
 
     await knowledgeItemRepo.save(item)
 
-    res.json(item)
+    return res.json(item)
   } catch (error) {
-    next(error)
+    return next(error)
   }
 })
 
@@ -137,9 +137,9 @@ router.delete('/:id', async (req, res, next) => {
 
     await knowledgeItemRepo.save(item)
 
-    res.json({ success: true, message: 'Knowledge item deleted' })
+    return res.json({ success: true, message: 'Knowledge item deleted' })
   } catch (error) {
-    next(error)
+    return next(error)
   }
 })
 
@@ -184,13 +184,13 @@ router.post('/:id/review', async (req, res, next) => {
 
     await knowledgeItemRepo.save(item)
 
-    res.json({
+    return res.json({
       success: true,
       nextReviewDate: item.nextReviewDate,
       reviewCount: item.reviewCount,
     })
   } catch (error) {
-    next(error)
+    return next(error)
   }
 })
 

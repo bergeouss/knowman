@@ -3,7 +3,7 @@ import { getRepository } from '../../database'
 import { Tag } from '../../database/entities/Tag'
 import { KnowledgeItem } from '../../database/entities/KnowledgeItem'
 
-const router = express.Router()
+const router: express.Router = express.Router()
 
 // GET /api/tags - List all tags for user
 router.get('/', async (req, res, next) => {
@@ -107,9 +107,9 @@ router.post('/', async (req, res, next) => {
 
     await tagRepo.save(tag)
 
-    res.status(201).json(tag)
+    return res.status(201).json(tag)
   } catch (error) {
-    next(error)
+    return next(error)
   }
 })
 
@@ -147,9 +147,9 @@ router.put('/:id', async (req, res, next) => {
 
     await tagRepo.save(tag)
 
-    res.json(tag)
+    return res.json(tag)
   } catch (error) {
-    next(error)
+    return next(error)
   }
 })
 
@@ -177,19 +177,19 @@ router.delete('/:id', async (req, res, next) => {
       .getMany()
 
     for (const item of itemsWithTag) {
-      item.tags = item.tags.filter((t) => t !== tag.name)
+      item.tags = item.tags.filter((t: string) => t !== tag.name)
       await knowledgeItemRepo.save(item)
     }
 
     // Delete the tag
     await tagRepo.remove(tag)
 
-    res.json({
+    return res.json({
       success: true,
       message: `Tag deleted and removed from ${itemsWithTag.length} items`,
     })
   } catch (error) {
-    next(error)
+    return next(error)
   }
 })
 

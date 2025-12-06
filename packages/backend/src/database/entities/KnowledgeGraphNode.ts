@@ -9,16 +9,13 @@ export class KnowledgeGraphNode {
   @Column()
   label!: string
 
-  @Column({
-    type: 'varchar',
-    enum: ['concept', 'topic', 'entity', 'document'],
-  })
-  type!: string
+  @Column({ type: 'enum', enum: ['concept', 'topic', 'entity', 'document'] })
+  type!: 'concept' | 'topic' | 'entity' | 'document'
 
   @Column('simple-json', { default: '{}' })
   properties!: Record<string, any>
 
-  @Column('simple-array', { nullable: true, type: 'text' })
+  @Column('simple-json', { nullable: true })
   embeddings?: number[]
 
   @Column('float', { default: 0.5 })

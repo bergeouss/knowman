@@ -4,7 +4,7 @@ import { getRepository } from '../../database'
 import { KnowledgeItem } from '../../database/entities/KnowledgeItem'
 import { logger } from '../../logging'
 
-const router = express.Router()
+const router: express.Router = express.Router()
 
 // Validation schema for search request
 const searchSchema = z.object({

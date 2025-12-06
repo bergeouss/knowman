@@ -10,17 +10,22 @@ export async function initializeRedis(): Promise<Redis> {
   }
 
   try {
-    redis = new Redis({
+    const redisOptions: Record<string, any> = {
       host: config.REDIS_URL.includes('://') ? new URL(config.REDIS_URL).hostname : 'localhost',
       port: config.REDIS_URL.includes('://') ? parseInt(new URL(config.REDIS_URL).port || '6379') : 6379,
-      password: config.REDIS_PASSWORD,
       db: config.REDIS_DB,
-      retryStrategy: (times) => {
+      retryStrategy: (times: number) => {
         const delay = Math.min(times * 50, 2000)
         return delay
       },
       maxRetriesPerRequest: 3,
-    })
+    }
+
+    if (config.REDIS_PASSWORD) {
+      redisOptions.password = config.REDIS_PASSWORD
+    }
+
+    redis = new Redis(redisOptions)
 
     redis.on('error', (error) => {
       logger.error(error, 'Redis error')

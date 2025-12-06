@@ -6,7 +6,7 @@ import { KnowledgeItem } from '../../database/entities/KnowledgeItem'
 import { ProcessingJob } from '../../database/entities/ProcessingJob'
 import { logger } from '../../logging'
 
-const router = express.Router()
+const router: express.Router = express.Router()
 
 // Validation schema for capture request
 const captureSchema = z.object({
@@ -60,11 +60,16 @@ router.post('/', async (req, res, next) => {
       const extractionJob = processingJobRepo.create({
         knowledgeItemId: knowledgeItem.id,
         userId,
-        type: 'extraction',
-        status: 'pending',
+        type: 'extraction' as const,
+        status: 'pending' as const,
         priority: 10,
         input: { html, url, title },
-      })
+        attempts: 0,
+        output: undefined,
+        error: undefined,
+        startedAt: undefined,
+        completedAt: undefined,
+      }) as ProcessingJob
       await processingJobRepo.save(extractionJob)
       jobs.push(extractionJob)
 
@@ -86,11 +91,16 @@ router.post('/', async (req, res, next) => {
     const summarizationJob = processingJobRepo.create({
       knowledgeItemId: knowledgeItem.id,
       userId,
-      type: 'summarization',
-      status: 'pending',
+      type: 'summarization' as const,
+      status: 'pending' as const,
       priority: 5,
       input: { content, title },
-    })
+      attempts: 0,
+      output: undefined,
+      error: undefined,
+      startedAt: undefined,
+      completedAt: undefined,
+    }) as ProcessingJob
     await processingJobRepo.save(summarizationJob)
     jobs.push(summarizationJob)
 
@@ -109,11 +119,16 @@ router.post('/', async (req, res, next) => {
     const taggingJob = processingJobRepo.create({
       knowledgeItemId: knowledgeItem.id,
       userId,
-      type: 'tagging',
-      status: 'pending',
+      type: 'tagging' as const,
+      status: 'pending' as const,
       priority: 3,
       input: { content, title },
-    })
+      attempts: 0,
+      output: undefined,
+      error: undefined,
+      startedAt: undefined,
+      completedAt: undefined,
+    }) as ProcessingJob
     await processingJobRepo.save(taggingJob)
     jobs.push(taggingJob)
 
@@ -132,11 +147,16 @@ router.post('/', async (req, res, next) => {
     const embeddingJob = processingJobRepo.create({
       knowledgeItemId: knowledgeItem.id,
       userId,
-      type: 'embedding',
-      status: 'pending',
+      type: 'embedding' as const,
+      status: 'pending' as const,
       priority: 1,
       input: { content, title },
-    })
+      attempts: 0,
+      output: undefined,
+      error: undefined,
+      startedAt: undefined,
+      completedAt: undefined,
+    }) as ProcessingJob
     await processingJobRepo.save(embeddingJob)
     jobs.push(embeddingJob)
 
@@ -153,7 +173,7 @@ router.post('/', async (req, res, next) => {
 
     logger.info(`Created knowledge item ${knowledgeItem.id} with ${jobs.length} processing jobs`)
 
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
       data: {
         knowledgeItem,
@@ -163,7 +183,7 @@ router.post('/', async (req, res, next) => {
     })
   } catch (error) {
     logger.error(error, 'Capture request failed')
-    next(error)
+    return next(error)
   }
 })
 
@@ -188,12 +208,12 @@ router.get('/status/:id', async (req, res, next) => {
       order: { createdAt: 'DESC' },
     })
 
-    res.json({
+    return res.json({
       knowledgeItem,
       processingJobs,
     })
   } catch (error) {
-    next(error)
+    return next(error)
   }
 })
 
