@@ -10,7 +10,7 @@
     "preview": "vite preview",
     "type-check": "tsc --noEmit",
     "package": "bun run build && zip -r ../extension.zip dist/",
-    "test": "echo "No tests for extension" && exit 0"
+    "test": "echo 'No tests for extension' && exit 0"
   },
   "dependencies": {
     "react": "^19.2.0",
