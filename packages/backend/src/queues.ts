@@ -187,19 +187,19 @@ function setupWorkerEventListeners() {
   if (!workers) return
 
   Object.entries(workers).forEach(([workerName, worker]) => {
-    worker.on('completed', (job: any) => {
+    worker.on('completed', (job: { id: string }) => {
       logger.info(`Worker ${workerName} completed job ${job.id}`)
     })
 
-    worker.on('failed', (job: any, error: any) => {
+    worker.on('failed', (job: { id: string } | undefined, error: Error) => {
       logger.error(error, `Worker ${workerName} failed job ${job?.id}`)
     })
 
-    worker.on('stalled', (jobId: any) => {
+    worker.on('stalled', (jobId: string) => {
       logger.warn(`Worker ${workerName} stalled job ${jobId}`)
     })
 
-    worker.on('error', (error: any) => {
+    worker.on('error', (error: Error) => {
       logger.error(error, `Worker ${workerName} error`)
     })
   })

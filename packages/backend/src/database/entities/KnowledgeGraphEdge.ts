@@ -16,7 +16,7 @@ export class KnowledgeGraphEdge {
   @Column()
   type!: string
 
-  @Column('float', { default: 1.0 })
+  @Column({ type: 'float', default: 1.0 })
   weight!: number
 
   @Column('simple-json', { default: '{}' })

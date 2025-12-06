@@ -61,10 +61,10 @@ export class KnowledgeItem {
   @Column('simple-json', { nullable: true })
   embeddings?: number[]
 
-  @Column('float', { default: 0.5 })
+  @Column({ type: 'float', default: 0.5 })
   importanceScore!: number
 
-  @Column('float', { default: 0.5 })
+  @Column({ type: 'float', default: 0.5 })
   readabilityScore!: number
 
   @CreateDateColumn()

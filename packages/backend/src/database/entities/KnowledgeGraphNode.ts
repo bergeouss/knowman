@@ -18,7 +18,7 @@ export class KnowledgeGraphNode {
   @Column('simple-json', { nullable: true })
   embeddings?: number[]
 
-  @Column('float', { default: 0.5 })
+  @Column({ type: 'float', default: 0.5 })
   importance!: number
 
   @CreateDateColumn()

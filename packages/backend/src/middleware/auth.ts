@@ -46,7 +46,7 @@ export const authMiddleware: express.RequestHandler = (req, res, next) => {
 }
 
 // Optional: Role-based middleware for future use
-export const requireAdmin: express.RequestHandler = (_req, _res, next) => {
+export const requireAdmin: express.RequestHandler = (_req, _res, next) => { // eslint-disable-line @typescript-eslint/no-unused-vars
   // For now, all users are admins in local-first mode
   // In future, implement proper role checking
   next()

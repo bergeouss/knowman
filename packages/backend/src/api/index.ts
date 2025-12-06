@@ -14,7 +14,7 @@ export const apiRouter: express.Router = express.Router()
 // })
 
 // API documentation
-apiRouter.get('/docs', (_req, res) => {
+apiRouter.get('/docs', (_req, res) => { // eslint-disable-line @typescript-eslint/no-unused-vars
   res.json({
     name: 'KnowMan API',
     version: '0.1.0',
@@ -40,7 +40,7 @@ apiRouter.use('/tags', tagsRouter)
 apiRouter.use('/processing', processingRouter)
 
 // Error handling for API routes
-apiRouter.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+apiRouter.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => { // eslint-disable-line @typescript-eslint/no-unused-vars
   console.error('API Error:', err)
   res.status(500).json({
     error: 'Internal server error',

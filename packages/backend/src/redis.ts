@@ -10,7 +10,8 @@ export async function initializeRedis(): Promise<Redis> {
   }
 
   try {
-    const redisOptions: Record<string, any> = {
+    // Build options dynamically to handle optional password
+    const baseOptions = {
       host: config.REDIS_URL.includes('://') ? new URL(config.REDIS_URL).hostname : 'localhost',
       port: config.REDIS_URL.includes('://') ? parseInt(new URL(config.REDIS_URL).port || '6379') : 6379,
       db: config.REDIS_DB,
@@ -21,9 +22,10 @@ export async function initializeRedis(): Promise<Redis> {
       maxRetriesPerRequest: 3,
     }
 
-    if (config.REDIS_PASSWORD) {
-      redisOptions.password = config.REDIS_PASSWORD
-    }
+    // Add password only if it exists
+    const redisOptions = config.REDIS_PASSWORD
+      ? { ...baseOptions, password: config.REDIS_PASSWORD }
+      : baseOptions
 
     redis = new Redis(redisOptions)
 
