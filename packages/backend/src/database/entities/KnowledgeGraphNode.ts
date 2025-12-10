@@ -9,7 +9,7 @@ export class KnowledgeGraphNode {
   @Column()
   label!: string
 
-  @Column({ type: 'enum', enum: ['concept', 'topic', 'entity', 'document'] })
+  @Column('varchar')
   type!: 'concept' | 'topic' | 'entity' | 'document'
 
   @Column('simple-json', { default: '{}' })

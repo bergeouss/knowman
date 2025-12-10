@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google'
 import './globals.css'
 import { ReactQueryProvider } from '@/components/providers/ReactQueryProvider'
 import { ThemeProvider } from '@/components/providers/ThemeProvider'
+import { AuthProvider } from '@/components/providers/AuthProvider'
 import { Navigation } from '@/components/layout/Navigation'
 import { Toaster } from '@/components/ui/Toaster'
 
@@ -23,13 +24,15 @@ export default function RootLayout({
       <body className={`${inter.className} antialiased`}>
         <ThemeProvider>
           <ReactQueryProvider>
-            <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-950">
-              <Navigation />
-              <main className="container mx-auto px-4 py-8">
-                {children}
-              </main>
-            </div>
-            <Toaster />
+            <AuthProvider>
+              <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-950">
+                <Navigation />
+                <main className="container mx-auto px-4 py-8">
+                  {children}
+                </main>
+              </div>
+              <Toaster />
+            </AuthProvider>
           </ReactQueryProvider>
         </ThemeProvider>
       </body>

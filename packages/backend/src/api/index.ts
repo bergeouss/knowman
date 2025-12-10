@@ -4,6 +4,7 @@ import { searchRouter } from './routes/search'
 import { itemsRouter } from './routes/items'
 import { tagsRouter } from './routes/tags'
 import { processingRouter } from './routes/processing'
+import authRouter from './routes/auth'
 import { authMiddleware } from '../middleware/auth'
 
 export const apiRouter: express.Router = express.Router()
@@ -19,6 +20,7 @@ apiRouter.get('/docs', (_req, res) => { // eslint-disable-line @typescript-eslin
     name: 'KnowMan API',
     version: '0.1.0',
     endpoints: {
+      '/api/auth': 'Authentication (register, login, refresh, logout)',
       '/api/capture': 'Capture new content',
       '/api/search': 'Search knowledge base',
       '/api/items': 'Manage knowledge items',
@@ -29,10 +31,13 @@ apiRouter.get('/docs', (_req, res) => { // eslint-disable-line @typescript-eslin
   })
 })
 
-// Apply authentication middleware to all routes (except health/docs)
+// Mount auth routes (no authentication required)
+apiRouter.use('/auth', authRouter)
+
+// Apply authentication middleware to all other routes
 apiRouter.use(authMiddleware)
 
-// Mount routes
+// Mount protected routes
 apiRouter.use('/capture', captureRouter)
 apiRouter.use('/search', searchRouter)
 apiRouter.use('/items', itemsRouter)

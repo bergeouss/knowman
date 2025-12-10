@@ -3,6 +3,7 @@ import { logger } from '../logging'
 import { getRepository } from '../database'
 import { KnowledgeItem } from '../database/entities/KnowledgeItem'
 import { ProcessingJob } from '../database/entities/ProcessingJob'
+import { AIProviderFactory } from '../ai/factory'
 
 export interface EmbeddingJobData {
   knowledgeItemId: string
@@ -12,7 +13,7 @@ export interface EmbeddingJobData {
 }
 
 export async function processEmbeddingJob(job: Job<EmbeddingJobData>) {
-  const { knowledgeItemId, userId, content } = job.data
+  const { knowledgeItemId, userId, content, title } = job.data
   const jobId = job.id
 
   logger.info(`Processing embedding job ${jobId} for item ${knowledgeItemId}`)
@@ -30,21 +31,15 @@ export async function processEmbeddingJob(job: Job<EmbeddingJobData>) {
       await processingJobRepo.save(processingJob)
     }
 
-    // Simple embedding placeholder (to be replaced with actual embedding model)
-    // For now, generate dummy embeddings
-    const text = content.substring(0, 1000) // Limit content for embedding
-    const words = text.toLowerCase().split(/\W+/).filter(w => w.length > 2)
-    const uniqueWords = [...new Set(words)]
+    // Use AI provider for embeddings (embedding-specific provider)
+    const aiProvider = AIProviderFactory.getInstance(true)
 
-    // Generate deterministic pseudo-embeddings based on word counts
-    const embeddingSize = 384 // Common embedding size
-    const embeddings = new Array(embeddingSize).fill(0)
-
-    uniqueWords.forEach((word, i) => {
-      const hash = word.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)
-      const seed = (hash + i) % embeddingSize
-      embeddings[seed] = (embeddings[seed] + 1) / (uniqueWords.length + 1)
+    const embeddingResult = await aiProvider.generateEmbeddings({
+      content,
+      title
     })
+
+    const embeddings = embeddingResult.embeddings
 
     // Update knowledge item
     const knowledgeItemRepo = getRepository(KnowledgeItem)
@@ -67,12 +62,18 @@ export async function processEmbeddingJob(job: Job<EmbeddingJobData>) {
     if (processingJob) {
       processingJob.status = 'completed'
       processingJob.completedAt = new Date()
-      processingJob.output = { embeddingSize: embeddingSize }
+      processingJob.output = {
+        embeddingSize: embeddings.length,
+        model: embeddingResult.model
+      }
       await processingJobRepo.save(processingJob)
     }
 
-    logger.info(`Embedding job ${jobId} completed`)
-    return { embeddingSize: embeddingSize }
+    logger.info(`Embedding job ${jobId} completed using ${embeddingResult.model}`)
+    return {
+      embeddingSize: embeddings.length,
+      model: embeddingResult.model
+    }
   } catch (error) {
     logger.error(error, `Embedding job ${jobId} failed`)
 

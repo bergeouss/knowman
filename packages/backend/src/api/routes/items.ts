@@ -1,6 +1,7 @@
 import express from 'express'
 import { getRepository } from '../../database'
 import { KnowledgeItem } from '../../database/entities/KnowledgeItem'
+import { sendSuccessResponse, sendErrorResponse } from '../utils/response'
 
 const router: express.Router = express.Router()
 
@@ -50,12 +51,76 @@ router.get('/', async (req, res, next) => {
 
     const items = await qb.getMany()
 
-    return res.json({
+    return sendSuccessResponse(res, {
       items,
       total,
       limit: parseInt(limit as string),
       offset: parseInt(offset as string),
       hasMore: parseInt(offset as string) + parseInt(limit as string) < total,
+    })
+  } catch (error) {
+    return next(error)
+  }
+})
+
+// GET /api/items/stats - Get item statistics
+router.get('/stats', async (req, res, next) => {
+  try {
+    const userId = (req as any).userId
+
+    const knowledgeItemRepo = getRepository(KnowledgeItem)
+
+    // Get overall statistics
+    const total = await knowledgeItemRepo.count({
+      where: { userId, status: 'active' }
+    })
+
+    const processed = await knowledgeItemRepo.count({
+      where: { userId, status: 'processed' }
+    })
+
+    const pending = await knowledgeItemRepo.count({
+      where: { userId, status: 'pending' }
+    })
+
+    const archived = await knowledgeItemRepo.count({
+      where: { userId, status: 'archived' }
+    })
+
+    // Get statistics by source type
+    const sourceTypeStats = await knowledgeItemRepo
+      .createQueryBuilder('item')
+      .select('item.sourceType, COUNT(*) as count')
+      .where('item.userId = :userId', { userId })
+      .andWhere('item.status != :deleted', { deleted: 'deleted' })
+      .groupBy('item.sourceType')
+      .getRawMany()
+
+    const bySourceType = sourceTypeStats.reduce((acc, stat) => {
+      acc[stat.sourceType] = parseInt(stat.count)
+      return acc
+    }, {} as Record<string, number>)
+
+    // Get statistics by status
+    const statusStats = await knowledgeItemRepo
+      .createQueryBuilder('item')
+      .select('item.status, COUNT(*) as count')
+      .where('item.userId = :userId', { userId })
+      .groupBy('item.status')
+      .getRawMany()
+
+    const byStatus = statusStats.reduce((acc, stat) => {
+      acc[stat.status] = parseInt(stat.count)
+      return acc
+    }, {} as Record<string, number>)
+
+    return sendSuccessResponse(res, {
+      total,
+      processed,
+      pending,
+      archived,
+      bySourceType,
+      byStatus,
     })
   } catch (error) {
     return next(error)
@@ -74,10 +139,10 @@ router.get('/:id', async (req, res, next) => {
     })
 
     if (!item) {
-      return res.status(404).json({ error: 'Knowledge item not found' })
+      return sendErrorResponse(res, 'Knowledge item not found', 404)
     }
 
-    return res.json(item)
+    return sendSuccessResponse(res, item)
   } catch (error) {
     return next(error)
   }
@@ -96,7 +161,7 @@ router.put('/:id', async (req, res, next) => {
     })
 
     if (!item) {
-      return res.status(404).json({ error: 'Knowledge item not found' })
+      return sendErrorResponse(res, 'Knowledge item not found', 404)
     }
 
     // Update fields
@@ -110,7 +175,7 @@ router.put('/:id', async (req, res, next) => {
 
     await knowledgeItemRepo.save(item)
 
-    return res.json(item)
+    return sendSuccessResponse(res, item)
   } catch (error) {
     return next(error)
   }
@@ -128,7 +193,7 @@ router.delete('/:id', async (req, res, next) => {
     })
 
     if (!item) {
-      return res.status(404).json({ error: 'Knowledge item not found' })
+      return sendErrorResponse(res, 'Knowledge item not found', 404)
     }
 
     // Soft delete by updating status
@@ -137,7 +202,7 @@ router.delete('/:id', async (req, res, next) => {
 
     await knowledgeItemRepo.save(item)
 
-    return res.json({ success: true, message: 'Knowledge item deleted' })
+    return sendSuccessResponse(res, { success: true, message: 'Knowledge item deleted' })
   } catch (error) {
     return next(error)
   }
@@ -156,7 +221,7 @@ router.post('/:id/review', async (req, res, next) => {
     })
 
     if (!item) {
-      return res.status(404).json({ error: 'Knowledge item not found' })
+      return sendErrorResponse(res, 'Knowledge item not found', 404)
     }
 
     // Update review information
@@ -184,7 +249,7 @@ router.post('/:id/review', async (req, res, next) => {
 
     await knowledgeItemRepo.save(item)
 
-    return res.json({
+    return sendSuccessResponse(res, {
       success: true,
       nextReviewDate: item.nextReviewDate,
       reviewCount: item.reviewCount,

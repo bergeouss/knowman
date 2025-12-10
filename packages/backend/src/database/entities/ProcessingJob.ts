@@ -13,10 +13,10 @@ export class ProcessingJob {
   @Column()
   userId!: string
 
-  @Column({ type: 'enum', enum: ['summarization', 'embedding', 'tagging', 'extraction'] })
+  @Column('varchar')
   type!: 'summarization' | 'embedding' | 'tagging' | 'extraction'
 
-  @Column({ type: 'enum', enum: ['pending', 'processing', 'completed', 'failed'], default: 'pending' })
+  @Column('varchar', { default: 'pending' })
   status!: 'pending' | 'processing' | 'completed' | 'failed'
 
   @Column({ default: 0 })

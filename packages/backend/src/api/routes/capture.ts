@@ -1,4 +1,5 @@
 import express from 'express'
+import multer from 'multer'
 import { z } from 'zod'
 import { getRepository } from '../../database'
 import { getQueues } from '../../queues'
@@ -211,6 +212,135 @@ router.get('/status/:id', async (req, res, next) => {
     return res.json({
       knowledgeItem,
       processingJobs,
+    })
+  } catch (error) {
+    return next(error)
+  }
+})
+
+// Configure multer for file uploads
+const storage = multer.memoryStorage() // Store files in memory
+const upload = multer({
+  storage,
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    // Accept common document and text files
+    const allowedMimeTypes = [
+      'application/pdf',
+      'text/plain',
+      'text/markdown',
+      'text/html',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/vnd.ms-excel',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'application/vnd.ms-powerpoint',
+      'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+      'application/json',
+      'application/xml',
+    ]
+
+    if (allowedMimeTypes.includes(file.mimetype)) {
+      cb(null, true)
+    } else {
+      cb(new Error(`File type ${file.mimetype} not allowed`))
+    }
+  },
+})
+
+// POST /api/capture/upload - Upload and process a file
+router.post('/upload', upload.single('file'), async (req, res, next) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file uploaded' })
+    }
+
+    const userId = (req as any).userId
+    const file = req.file
+    const title = req.body.title || file.originalname
+    let tags: string[] = []
+
+    try {
+      if (req.body.tags) {
+        tags = JSON.parse(req.body.tags)
+      }
+    } catch (error) {
+      // If tags can't be parsed, use empty array
+    }
+
+    let metadata: Record<string, any> = {}
+    try {
+      if (req.body.metadata) {
+        metadata = JSON.parse(req.body.metadata)
+      }
+    } catch (error) {
+      // If metadata can't be parsed, use empty object
+    }
+
+    logger.info(`Uploading file: ${file.originalname} (${file.mimetype}, ${file.size} bytes) for user ${userId}`)
+
+    // Determine source type from file mimetype
+    let sourceType: 'pdf' | 'document' | 'note' = 'document'
+    if (file.mimetype === 'application/pdf') {
+      sourceType = 'pdf'
+    } else if (file.mimetype.includes('text/')) {
+      sourceType = 'note'
+    }
+
+    // Extract text content from file buffer (simplified - in production would use proper extraction)
+    const content = file.buffer.toString('utf-8', 0, Math.min(file.buffer.length, 10000))
+
+    // Create knowledge item
+    const knowledgeItemRepo = getRepository(KnowledgeItem)
+    const knowledgeItem = knowledgeItemRepo.create({
+      userId,
+      sourceType,
+      sourceUrl: null,
+      title,
+      content: content.substring(0, 10000),
+      metadata: {
+        ...metadata,
+        originalFilename: file.originalname,
+        mimeType: file.mimetype,
+        fileSize: file.size,
+      },
+      rawContent: file.buffer.toString('base64'), // Store file as base64 for processing
+      status: 'captured',
+      importanceScore: 0.5,
+      readabilityScore: 0.5,
+      tags,
+    })
+
+    await knowledgeItemRepo.save(knowledgeItem)
+
+    // Add processing jobs
+    const queues = getQueues()
+    await queues.summarization.add('summarize', {
+      knowledgeItemId: knowledgeItem.id,
+      userId,
+      content: knowledgeItem.content,
+    })
+
+    await queues.tagging.add('tag', {
+      knowledgeItemId: knowledgeItem.id,
+      userId,
+      content: knowledgeItem.content,
+    })
+
+    await queues.embedding.add('embed', {
+      knowledgeItemId: knowledgeItem.id,
+      userId,
+      content: knowledgeItem.content,
+    })
+
+    logger.info(`File uploaded and processing started: ${knowledgeItem.id}`)
+
+    return res.json({
+      success: true,
+      data: knowledgeItem,
+      message: 'File uploaded successfully',
     })
   } catch (error) {
     return next(error)

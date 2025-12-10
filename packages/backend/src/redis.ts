@@ -10,24 +10,47 @@ export async function initializeRedis(): Promise<Redis> {
   }
 
   try {
-    // Build options dynamically to handle optional password
-    const baseOptions = {
-      host: config.REDIS_URL.includes('://') ? new URL(config.REDIS_URL).hostname : 'localhost',
-      port: config.REDIS_URL.includes('://') ? parseInt(new URL(config.REDIS_URL).port || '6379') : 6379,
-      db: config.REDIS_DB,
+    // Parse connection URL or use host/port
+    let host = 'localhost'
+    let port = 6379
+
+    if (config.REDIS_URL && config.REDIS_URL.includes('://')) {
+      try {
+        const url = new URL(config.REDIS_URL)
+        host = url.hostname
+        port = parseInt(url.port || '6379')
+      } catch (error) {
+        logger.warn(error, 'Failed to parse REDIS_URL, using defaults')
+      }
+    }
+
+    // Build options
+    const baseOptions: any = {
+      host: config.REDIS_HOST || host,
+      port: config.REDIS_PORT || port,
+      db: config.REDIS_DB || 0,
+      family: config.REDIS_FAMILY || 0, // 0 = IPv4 & IPv6, 4 = IPv4, 6 = IPv6
       retryStrategy: (times: number) => {
         const delay = Math.min(times * 50, 2000)
+        logger.warn(`Redis retry attempt ${times}, delaying ${delay}ms`)
         return delay
       },
-      maxRetriesPerRequest: 3,
+      maxRetriesPerRequest: null,
+      enableReadyCheck: true,
+      connectTimeout: 5000,
     }
 
     // Add password only if it exists
-    const redisOptions = config.REDIS_PASSWORD
-      ? { ...baseOptions, password: config.REDIS_PASSWORD }
-      : baseOptions
+    if (config.REDIS_PASSWORD) {
+      baseOptions.password = config.REDIS_PASSWORD
+    }
 
-    redis = new Redis(redisOptions)
+    // Use connection string if provided and no host/port overrides
+    if (config.REDIS_URL && !config.REDIS_HOST && !config.REDIS_PORT) {
+      redis = new Redis(config.REDIS_URL, baseOptions)
+    } else {
+      redis = new Redis(baseOptions)
+    }
 
     redis.on('error', (error) => {
       logger.error(error, 'Redis error')

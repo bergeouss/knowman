@@ -3,13 +3,15 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Bell, BookOpen, Search, Settings, Menu, X } from 'lucide-react'
+import { Bell, BookOpen, Search, Settings, Menu, X, FileText, PlusCircle, LogOut, User } from 'lucide-react'
 import { useTheme } from '@/components/providers/ThemeProvider'
+import { useAuth } from '@/components/providers/AuthProvider'
 
 const navigation = [
   { name: 'Dashboard', href: '/', icon: BookOpen },
   { name: 'Search', href: '/search', icon: Search },
-  { name: 'Library', href: '/library', icon: BookOpen },
+  { name: 'Items', href: '/items', icon: FileText },
+  { name: 'Capture', href: '/capture', icon: PlusCircle },
   { name: 'Settings', href: '/settings', icon: Settings },
 ]
 
@@ -17,6 +19,7 @@ export function Navigation() {
   const pathname = usePathname()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const { theme, setTheme } = useTheme()
+  const { user, isLoading, isAuthenticated, logout } = useAuth()
 
   return (
     <nav className="sticky top-0 z-50 border-b bg-white/80 backdrop-blur-md dark:bg-gray-900/80">
@@ -76,13 +79,42 @@ export function Navigation() {
             </button>
 
             {/* User menu */}
-            <div className="hidden md:flex items-center space-x-3 rounded-lg border px-3 py-2 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800">
-              <div className="h-8 w-8 rounded-full bg-gradient-to-br from-primary-400 to-primary-600" />
-              <div className="hidden lg:block">
-                <p className="text-sm font-medium">Vincent</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">Admin</p>
+            {isAuthenticated && user ? (
+              <div className="hidden md:flex items-center space-x-3">
+                <div className="flex items-center space-x-3 rounded-lg border px-3 py-2 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800">
+                  <div className="h-8 w-8 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center">
+                    <User className="h-4 w-4 text-white" />
+                  </div>
+                  <div className="hidden lg:block">
+                    <p className="text-sm font-medium">{user.name || user.email.split('@')[0]}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">{user.email}</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => logout()}
+                  className="rounded-lg p-2 hover:bg-gray-100 dark:hover:bg-gray-800"
+                  aria-label="Logout"
+                  title="Logout"
+                >
+                  <LogOut className="h-5 w-5" />
+                </button>
               </div>
-            </div>
+            ) : (
+              <div className="hidden md:flex items-center space-x-2">
+                <Link
+                  href="/login"
+                  className="rounded-lg px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
+                >
+                  Login
+                </Link>
+                <Link
+                  href="/register"
+                  className="rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700"
+                >
+                  Register
+                </Link>
+              </div>
+            )}
 
             {/* Mobile menu button */}
             <button
@@ -121,6 +153,51 @@ export function Navigation() {
                   </Link>
                 )
               })}
+
+              {/* Mobile auth links */}
+              {!isAuthenticated && (
+                <div className="space-y-2 pt-4 border-t">
+                  <Link
+                    href="/login"
+                    className="flex items-center justify-center rounded-lg px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Login
+                  </Link>
+                  <Link
+                    href="/register"
+                    className="flex items-center justify-center rounded-lg bg-primary-600 px-4 py-3 text-sm font-medium text-white hover:bg-primary-700"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Register
+                  </Link>
+                </div>
+              )}
+
+              {/* Mobile user info and logout */}
+              {isAuthenticated && user && (
+                <div className="space-y-2 pt-4 border-t">
+                  <div className="flex items-center space-x-3 px-4 py-3">
+                    <div className="h-8 w-8 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center">
+                      <User className="h-4 w-4 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium">{user.name || user.email.split('@')[0]}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">{user.email}</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => {
+                      logout()
+                      setMobileMenuOpen(false)
+                    }}
+                    className="flex w-full items-center space-x-3 rounded-lg px-4 py-3 text-sm font-medium text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
+                  >
+                    <LogOut className="h-5 w-5" />
+                    <span>Logout</span>
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         )}

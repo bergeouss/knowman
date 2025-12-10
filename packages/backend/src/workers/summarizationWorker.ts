@@ -3,6 +3,7 @@ import { logger } from '../logging'
 import { getRepository } from '../database'
 import { KnowledgeItem } from '../database/entities/KnowledgeItem'
 import { ProcessingJob } from '../database/entities/ProcessingJob'
+import { AIProviderFactory } from '../ai/factory'
 
 export interface SummarizationJobData {
   knowledgeItemId: string
@@ -31,11 +32,16 @@ export async function processSummarizationJob(job: Job<SummarizationJobData>) {
       await processingJobRepo.save(processingJob)
     }
 
-    // Simple summarization logic (to be replaced with actual LLM)
-    // For now, just take first 3 sentences or 500 characters
-    const sentences = content.split(/[.!?]+/)
-    const summary = sentences.slice(0, 3).join('. ') + '.'
-    const truncatedSummary = summary.length > 500 ? summary.substring(0, 497) + '...' : summary
+    // Use AI provider for summarization (main provider, not embedding)
+    const aiProvider = AIProviderFactory.getInstance(false)
+
+    const summaryResult = await aiProvider.summarize({
+      content,
+      title: _title,
+      maxLength: 500
+    })
+
+    const truncatedSummary = summaryResult.summary
 
     // Update knowledge item
     const knowledgeItemRepo = getRepository(KnowledgeItem)
@@ -56,12 +62,20 @@ export async function processSummarizationJob(job: Job<SummarizationJobData>) {
     if (processingJob) {
       processingJob.status = 'completed'
       processingJob.completedAt = new Date()
-      processingJob.output = { summary: truncatedSummary }
+      processingJob.output = {
+        summary: truncatedSummary,
+        model: summaryResult.model,
+        tokensUsed: summaryResult.tokensUsed
+      }
       await processingJobRepo.save(processingJob)
     }
 
-    logger.info(`Summarization job ${jobId} completed`)
-    return { summary: truncatedSummary }
+    logger.info(`Summarization job ${jobId} completed using ${summaryResult.model}`)
+    return {
+      summary: truncatedSummary,
+      model: summaryResult.model,
+      tokensUsed: summaryResult.tokensUsed
+    }
   } catch (error) {
     logger.error(error, `Summarization job ${jobId} failed`)
 

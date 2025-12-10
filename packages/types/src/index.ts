@@ -158,6 +158,17 @@ export interface PaginatedResponse<T> {
 }
 
 // API request/response types
+export interface ListItemsParams {
+  limit?: number
+  offset?: number
+  status?: string
+  sourceType?: string
+  tag?: string
+  search?: string
+  sortBy?: string
+  sortOrder?: 'asc' | 'desc'
+}
+
 export interface CaptureRequest {
   url: string
   content: string

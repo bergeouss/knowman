@@ -1,6 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany } from 'typeorm'
 import { KnowledgeItem } from './KnowledgeItem'
-import { Tag } from './Tag'
 
 @Entity('users')
 export class User {
@@ -25,11 +24,8 @@ export class User {
     }
   }
 
-  @OneToMany(() => KnowledgeItem, (item) => item.user)
+  @OneToMany(() => KnowledgeItem, (item) => item.userId)
   knowledgeItems!: KnowledgeItem[]
-
-  @OneToMany(() => Tag, (tag) => tag.user)
-  tags!: Tag[]
 
   @CreateDateColumn()
   createdAt!: Date

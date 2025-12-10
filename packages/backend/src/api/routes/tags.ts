@@ -2,6 +2,7 @@ import express from 'express'
 import { getRepository } from '../../database'
 import { Tag } from '../../database/entities/Tag'
 import { KnowledgeItem } from '../../database/entities/KnowledgeItem'
+import { sendSuccessResponse, sendErrorResponse } from '../utils/response'
 
 const router: express.Router = express.Router()
 
@@ -16,7 +17,7 @@ router.get('/', async (req, res, next) => {
       order: { usageCount: 'DESC', name: 'ASC' },
     })
 
-    res.json(tags)
+    sendSuccessResponse(res, tags)
   } catch (error) {
     next(error)
   }
@@ -35,7 +36,7 @@ router.get('/popular', async (req, res, next) => {
       take: limit,
     })
 
-    res.json(tags)
+    sendSuccessResponse(res, tags)
   } catch (error) {
     next(error)
   }
@@ -62,7 +63,7 @@ router.get('/:name/items', async (req, res, next) => {
 
     const items = await qb.getMany()
 
-    res.json({
+    sendSuccessResponse(res, {
       items,
       total,
       limit,
@@ -82,7 +83,7 @@ router.post('/', async (req, res, next) => {
     const { name, color, description } = req.body
 
     if (!name) {
-      return res.status(400).json({ error: 'Tag name is required' })
+      return sendErrorResponse(res, 'Tag name is required', 400)
     }
 
     const tagRepo = getRepository(Tag)
@@ -93,7 +94,7 @@ router.post('/', async (req, res, next) => {
     })
 
     if (tag) {
-      return res.status(409).json({ error: 'Tag already exists' })
+      return sendErrorResponse(res, 'Tag already exists', 409)
     }
 
     // Create new tag
@@ -107,7 +108,7 @@ router.post('/', async (req, res, next) => {
 
     await tagRepo.save(tag)
 
-    return res.status(201).json(tag)
+    return sendSuccessResponse(res, tag, 201)
   } catch (error) {
     return next(error)
   }
@@ -126,7 +127,7 @@ router.put('/:id', async (req, res, next) => {
     })
 
     if (!tag) {
-      return res.status(404).json({ error: 'Tag not found' })
+      return sendErrorResponse(res, 'Tag not found', 404)
     }
 
     // Check if new name conflicts with existing tag
@@ -136,7 +137,7 @@ router.put('/:id', async (req, res, next) => {
       })
 
       if (existingTag) {
-        return res.status(409).json({ error: 'Tag name already exists' })
+        return sendErrorResponse(res, 'Tag name already exists', 409)
       }
 
       tag.name = name
@@ -147,7 +148,7 @@ router.put('/:id', async (req, res, next) => {
 
     await tagRepo.save(tag)
 
-    return res.json(tag)
+    return sendSuccessResponse(res, tag)
   } catch (error) {
     return next(error)
   }
@@ -165,7 +166,7 @@ router.delete('/:id', async (req, res, next) => {
     })
 
     if (!tag) {
-      return res.status(404).json({ error: 'Tag not found' })
+      return sendErrorResponse(res, 'Tag not found', 404)
     }
 
     // Remove tag from all knowledge items
@@ -184,7 +185,7 @@ router.delete('/:id', async (req, res, next) => {
     // Delete the tag
     await tagRepo.remove(tag)
 
-    return res.json({
+    return sendSuccessResponse(res, {
       success: true,
       message: `Tag deleted and removed from ${itemsWithTag.length} items`,
     })
@@ -208,7 +209,7 @@ router.get('/suggestions/:query', async (req, res, next) => {
       .take(10)
       .getMany()
 
-    res.json(tags.map((tag) => tag.name))
+    sendSuccessResponse(res, tags.map((tag) => tag.name))
   } catch (error) {
     next(error)
   }

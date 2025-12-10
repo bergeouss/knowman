@@ -3,12 +3,10 @@ import {
   PrimaryGeneratedColumn,
   Column,
   CreateDateColumn,
-  ManyToOne,
   ManyToMany,
   JoinTable,
   Index,
 } from 'typeorm'
-import { User } from './User'
 import { Tag } from './Tag'
 
 @Entity('knowledge_items')
@@ -22,8 +20,6 @@ export class KnowledgeItem {
   @Column()
   userId!: string
 
-  @ManyToOne(() => User, (user) => user.knowledgeItems)
-  user!: User
 
   @Column({
     type: 'varchar',

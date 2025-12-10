@@ -1,48 +1,78 @@
 import express from 'express'
 import { config } from '../config'
 import { logger } from '../logging'
+import { authService } from '../auth/service'
 
-// Simple authentication middleware for local-first application
-// In production, this should be replaced with proper authentication
+// Authentication middleware for KnowMan
+// Supports: JWT tokens, API keys, and development bypass
 
-export const authMiddleware: express.RequestHandler = (req, res, next) => {
-  // Skip authentication for health check and docs
-  if (req.path === '/health' || req.path === '/api/docs') {
+export const authMiddleware: express.RequestHandler = async (req, res, next) => {
+  // Skip authentication for OPTIONS (preflight) requests
+  if (req.method === 'OPTIONS') {
     return next()
   }
 
-  // Get authentication from header, query param, or body
+  // Skip authentication for health check and docs
+  if (req.path === '/health' || req.path === '/docs') {
+    return next()
+  }
+
+  // Skip authentication for auth routes (they're mounted before this middleware)
+  if (req.path.startsWith('/auth')) {
+    return next()
+  }
+
+  // Get authentication from header
   const authHeader = req.headers.authorization
   const apiKey = req.query.apiKey || req.body.apiKey
-  const userId = req.headers['x-user-id'] || req.query.userId || req.body.userId
+  const bypassAuth = req.headers['x-bypass-auth']
 
   // Development mode: allow bypass with special header
-  if (config.NODE_ENV === 'development' && req.headers['x-bypass-auth'] === 'true') {
+  if (config.NODE_ENV === 'development' && bypassAuth === 'true') {
     logger.debug('Bypassing authentication in development mode')
     // Set default user ID for development
-    ;(req as any).userId = userId || 'local-user'
+    ;(req as any).userId = 'local-user'
     return next()
+  }
+
+  // Check JWT token
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const token = authHeader.substring(7)
+    const validation = await authService.validateToken(token)
+
+    if (validation.isValid && validation.user) {
+      // Attach user ID to request
+      ;(req as any).userId = validation.user.id
+      ;(req as any).user = validation.user
+
+      logger.debug(`Authenticated request from user ${validation.user.email} to ${req.path}`)
+      return next()
+    }
   }
 
   // Check API key (simplified - in production use proper API key validation)
-  if (config.API_KEY && apiKey !== config.API_KEY && authHeader !== `Bearer ${config.API_KEY}`) {
-    logger.warn('Invalid API key attempt')
-    return res.status(401).json({ error: 'Invalid API key' })
+  if (config.API_KEY && apiKey === config.API_KEY) {
+    // For API key authentication, we need a user ID
+    const userId = req.headers['x-user-id'] || req.query.userId || req.body.userId
+    if (!userId) {
+      logger.warn('API key used without user ID')
+      return res.status(401).json({ error: 'User ID required with API key' })
+    }
+
+    // Attach user ID to request
+    ;(req as any).userId = userId
+    logger.debug(`API key authenticated request from user ${userId} to ${req.path}`)
+    return next()
   }
 
-  // Require user ID for all requests
-  if (!userId) {
-    logger.warn('Missing user ID')
-    return res.status(401).json({ error: 'User ID required' })
-  }
+  // No valid authentication found
+  logger.warn(`Unauthorized request attempt: ${req.path}`)
 
-  // Attach user ID to request
-  ;(req as any).userId = userId
-
-  // Log request for debugging
-  logger.debug(`Authenticated request from user ${userId} to ${req.path}`)
-
-  next()
+  return res.status(401).json({
+    success: false,
+    error: 'Authentication required',
+    message: 'Please provide a valid JWT token or API key'
+  })
 }
 
 // Optional: Role-based middleware for future use

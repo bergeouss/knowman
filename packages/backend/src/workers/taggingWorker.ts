@@ -4,6 +4,7 @@ import { getRepository } from '../database'
 import { KnowledgeItem } from '../database/entities/KnowledgeItem'
 import { ProcessingJob } from '../database/entities/ProcessingJob'
 import { Tag } from '../database/entities/Tag'
+import { AIProviderFactory } from '../ai/factory'
 
 export interface TaggingJobData {
   knowledgeItemId: string
@@ -32,30 +33,17 @@ export async function processTaggingJob(job: Job<TaggingJobData>) {
       await processingJobRepo.save(processingJob)
     }
 
-    // Simple tagging logic (to be replaced with actual NLP/ML)
-    // Extract potential tags from content and title
-    const text = (title + ' ' + content).toLowerCase()
-    const words = text.split(/\W+/).filter(w => w.length > 3)
+    // Use AI provider for tagging (main provider, not embedding)
+    const aiProvider = AIProviderFactory.getInstance(false)
 
-    // Common stop words to ignore
-    const stopWords = new Set(['that', 'this', 'with', 'from', 'have', 'what', 'when', 'where', 'which', 'will', 'your', 'they', 'their'])
-
-    // Count word frequencies
-    const wordCounts: Record<string, number> = {}
-    words.forEach(word => {
-      if (!stopWords.has(word)) {
-        wordCounts[word] = (wordCounts[word] || 0) + 1
-      }
+    const taggingResult = await aiProvider.generateTags({
+      content,
+      title,
+      existingTags,
+      maxTags: 5
     })
 
-    // Get top 5 words as tags
-    const topWords = Object.entries(wordCounts)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 5)
-      .map(([word]) => word)
-
-    // Combine with existing tags
-    const allTags = [...new Set([...existingTags, ...topWords])]
+    const allTags = taggingResult.tags
 
     // Update knowledge item
     const knowledgeItemRepo = getRepository(KnowledgeItem)
@@ -98,12 +86,20 @@ export async function processTaggingJob(job: Job<TaggingJobData>) {
     if (processingJob) {
       processingJob.status = 'completed'
       processingJob.completedAt = new Date()
-      processingJob.output = { tags: allTags }
+      processingJob.output = {
+        tags: allTags,
+        model: taggingResult.model,
+        confidence: taggingResult.confidence
+      }
       await processingJobRepo.save(processingJob)
     }
 
-    logger.info(`Tagging job ${jobId} completed`)
-    return { tags: allTags }
+    logger.info(`Tagging job ${jobId} completed using ${taggingResult.model}`)
+    return {
+      tags: allTags,
+      model: taggingResult.model,
+      confidence: taggingResult.confidence
+    }
   } catch (error) {
     logger.error(error, `Tagging job ${jobId} failed`)
 

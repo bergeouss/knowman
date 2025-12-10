@@ -8,7 +8,7 @@ const envSchema = z.object({
   VERSION: z.string().default('0.1.0'),
 
   // CORS
-  CORS_ORIGINS: z.string().default('http://localhost:3000,http://localhost:5173').transform(val => val.split(',')),
+  CORS_ORIGINS: z.string().default('http://localhost:3000,http://127.0.0.1:3000,http://localhost:5173').transform(val => val.split(',')),
 
   // Database
   DATABASE_URL: z.string().default('sqlite:./data/knowman.db'),
@@ -16,8 +16,11 @@ const envSchema = z.object({
 
   // Redis
   REDIS_URL: z.string().default('redis://localhost:6379'),
+  REDIS_HOST: z.string().optional(),
+  REDIS_PORT: z.string().optional().transform(val => val ? parseInt(val) : undefined),
   REDIS_PASSWORD: z.string().optional(),
   REDIS_DB: z.string().default('0').transform(Number),
+  REDIS_FAMILY: z.string().optional().transform(val => val ? parseInt(val) : undefined),
 
   // Security
   JWT_SECRET: z.string().default('change-me-in-production'),
